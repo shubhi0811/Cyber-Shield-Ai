@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Shield AI - Your Smart Companion for Safer Browsing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🛡️ Cyber Shield AI</h1>
+        <p>Your Smart Companion for Safer Browsing</p>
+        <button id="themeToggle">🌙</button>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>🔐 Password Toolkit</h2>
+            <input type="text" id="passwordInput" placeholder="Type password or generate one">
+            <div id="strengthBar"><div id="strengthFill"></div></div>
+            <p id="strengthText">Strength: None</p>
+            <div class="generator">
+                <label>Length: <input type="number" id="passLength" value="16" min="8" max="32"></label>
+                <label><input type="checkbox" id="includeSymbols" checked> Symbols</label>
+                <label><input type="checkbox" id="includeNumbers" checked> Numbers</label>
+                <button id="generateBtn">Generate Secure Password</button>
+                <button id="copyBtn">📋 Copy</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🕵️ Password Breach Check</h2>
+            <p class="note">We use k-anonymity. Your full password never leaves your browser.</p>
+            <input type="password" id="breachInput" placeholder="Enter password to check">
+            <button id="breachBtn">Check if Pwned</button>
+            <div id="breachResult"></div>
+        </section>
+
+        <section class="card">
+            <h2>🤖 AI Scam Detector</h2>
+            <textarea id="scamInput" rows="4" placeholder="Paste suspicious email/text here..."></textarea>
+            <button id="scanBtn">Analyze with AI</button>
+            <div id="scamResult"></div>
+        </section>
+
+        <section class="card">
+            <h2>💡 Daily Cyber Tip</h2>
+            <p id="cyberTip">Loading tip...</p>
+            <button id="newTipBtn">New Tip</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>Built for Creative Showcase Hackathon 2026 | APIs: HaveIBeenPwned + Gemini</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
