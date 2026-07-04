@@ -4,10 +4,6 @@
 // APIs Used: HaveIBeenPwned, Google Gemini
 // ============================================
 
-const CONFIG = {
-    GEMINI_API_KEY: 'PASTE_YOUR_GEMINI_API_KEY_HERE' // Get free key: https://aistudio.google.com/app/apikey
-};
-
 // ============================================
 // 1. THEME MANAGER CLASS
 // ============================================
@@ -194,41 +190,40 @@ class ScamDetector {
             return;
         }
         
-        if (CONFIG.GEMINI_API_KEY === 'PASTE_YOUR_GEMINI_API_KEY_HERE') {
-            this.showResult('Add your Gemini API key at the top of script.js first', 'result-warn');
-            return;
-        }
-        
         this.resultDiv.textContent = 'Analyzing with AI...';
         
-        const prompt = `You are a cybersecurity expert. Analyze this message for scams/phishing. 
-        Reply in this exact format:
-        1. Risk Level: Safe / Suspicious / Scam
-        2. Why: One sentence explanation
-        3. Red Flags: Bullet list of suspicious elements
-        
-        Message to analyze: "${text}"`;
-        
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${CONFIG.GEMINI_API_KEY}`, {
+            const response = await fetch('/api/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
+                body: JSON.stringify({ text })
             });
             
             const data = await response.json();
-            const aiText = data.candidates[0].content.parts[0].text;
-            
-            // Color code based on risk level
+
+            if (!response.ok) {
+                const message = data?.error || 'AI analysis failed. Check server logs.';
+                this.showResult(message, 'result-warn');
+                return;
+            }
+
+            const aiText = data.text ||
+                data.candidates?.[0]?.content?.parts?.[0]?.text ||
+                data.output?.[0]?.content?.[0]?.text ||
+                data.choices?.[0]?.message?.content;
+
+            if (!aiText) {
+                this.showResult('AI returned an unexpected response format.', 'result-warn');
+                return;
+            }
+
             let riskClass = 'result-safe';
             if (aiText.includes('Scam')) riskClass = 'result-danger';
             else if (aiText.includes('Suspicious')) riskClass = 'result-warn';
             
             this.showResult(aiText.replace(/\n/g, '<br>'), riskClass);
         } catch (error) {
-            this.showResult('AI analysis failed. Check API key or internet connection.', 'result-warn');
+            this.showResult('AI analysis failed. Check server connection.', 'result-warn');
         }
     }
 
