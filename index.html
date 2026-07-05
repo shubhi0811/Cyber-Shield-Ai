@@ -4,32 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Shield AI - Your Smart Companion for Safer Browsing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
+    <header class="header">
         <h1>🛡️ Cyber Shield AI</h1>
-        <p>Your Smart Companion for Safer Browsing</p>
-        <button id="themeToggle">🌙</button>
+        <p>// SECURE. DETECT. PROTECT. //</p>
     </header>
 
     <main class="container">
         <section class="card">
-            <h2>🔐 Password Toolkit</h2>
-            <input type="text" id="passwordInput" placeholder="Type password or generate one">
-            <div id="strengthBar"><div id="strengthFill"></div></div>
-            <p id="strengthText">Strength: None</p>
+            <h3>🔐 Password Toolkit</h3>
+            <input type="text" id="password-input" placeholder="Generate pwd">
+            <div class="strength-meter"><div id="strength-fill" class="strength-fill"></div></div>
+            <p id="strength-text" class="strength-text">None</p>
             <div class="generator">
                 <label>Length: <input type="number" id="passLength" value="16" min="8" max="32"></label>
                 <label><input type="checkbox" id="includeSymbols" checked> Symbols</label>
                 <label><input type="checkbox" id="includeNumbers" checked> Numbers</label>
-                <button id="generateBtn">Generate Secure Password</button>
+                <button id="generateBtn">Generate Pwd</button>
                 <button id="copyBtn">📋 Copy</button>
             </div>
         </section>
 
         <section class="card">
-            <h2>🕵️ Password Breach Check</h2>
+            <h3>🤖 Scam Detector</h3>
+            <textarea id="scamInput" rows="4" placeholder="Paste suspicious email/text here..."></textarea>
+            <button id="scanBtn">Check for Scams</button>
+            <div id="scamResult"></div>
+        </section>
+
+        <section class="card">
+            <h3>🕵️ Password Breach Check</h3>
             <p class="note">We use k-anonymity. Your full password never leaves your browser.</p>
             <input type="password" id="breachInput" placeholder="Enter password to check">
             <button id="breachBtn">Check if Pwned</button>
@@ -37,22 +47,12 @@
         </section>
 
         <section class="card">
-            <h2>🤖 AI Scam Detector</h2>
-            <textarea id="scamInput" rows="4" placeholder="Paste suspicious email/text here..."></textarea>
-            <button id="scanBtn">Analyze with AI</button>
-            <div id="scamResult"></div>
-        </section>
-
-        <section class="card">
-            <h2>💡 Daily Cyber Tip</h2>
+            <h3>💡 Daily Cyber Tip</h3>
             <p id="cyberTip">Loading tip...</p>
             <button id="newTipBtn">New Tip</button>
         </section>
     </main>
 
-    <footer>
-        <p>Built for Creative Showcase Hackathon 2026 | APIs: HaveIBeenPwned + Gemini</p>
-    </footer>
     <script src="script.js"></script>
 </body>
 </html>
