@@ -1,63 +1,60 @@
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
 const path = require('path');
-require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
-const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const port = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-app.post('/api/scan', async (req, res) => {
+app.post('/api/scan', (req, res) => {
   const { text } = req.body;
-
-  if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Missing or invalid text' });
+  if (!text || text.trim() === '') {
+    return res.status(400).json({ error: 'Please enter some text to analyze' });
   }
 
-  if (!geminiApiKey || geminiApiKey === 'PASTE_YOUR_GEMINI_API_KEY_HERE') {
-    return res.status(500).json({ error: 'Gemini API key is not configured' });
-  }
+  const lowerText = text.toLowerCase();
+  let score = 0;
+  const redFlags = [];
+  const checks = [
+    { pattern: /lottery|winner|prize|congratulations.*won/i, points: 30, flag: 'Unexpected prize/lottery win' },
+    { pattern: /click here|claim now|act now|urgent/i, points: 25, flag: 'Urgent call to action' },
+    { pattern: /verify.*account|suspended|locked/i, points: 25, flag: 'Fake account security threat' },
+    { pattern: /bitcoin|crypto investment|guaranteed return/i, points: 20, flag: 'Crypto/investment scam' },
+    { pattern: /free money|earn \$\d+/i, points: 30, flag: 'Promises free money' },
+    { pattern: /bank.*details|ssn|social security/i, points: 35, flag: 'Requests sensitive info' },
+    { pattern: /paypal.*security|netflix.*billing/i, points: 25, flag: 'Impersonates trusted brand' }
+  ];
 
-  const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-mini';
-  const prompt = `You are a cybersecurity expert. Analyze this message for scams/phishing.\nReply in this exact format:\n1. Risk Level: Safe / Suspicious / Scam\n2. Why: One sentence explanation\n3. Red Flags: Bullet list of suspicious elements\n\nMessage to analyze: "${text}"`;
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateText?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: { text: prompt } })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'Gemini API error', details: data });
+  checks.forEach(check => {
+    if (check.pattern.test(lowerText)) {
+      score += check.points;
+      redFlags.push(check.flag);
     }
+  });
 
-    const aiText = data.text ||
-      data.output?.[0]?.content?.[0]?.text ||
-      data.candidates?.[0]?.content?.[0]?.text ||
-      data.choices?.[0]?.message?.content ||
-      null;
+  let riskLevel = 'Safe';
+  if (score >= 55) riskLevel = 'Scam';
+  else if (score >= 30) riskLevel = 'Suspicious';
 
-    if (!aiText) {
-      return res.status(500).json({ error: 'Gemini API returned no text', details: data });
-    }
-
-    return res.json({ text: aiText, raw: data });
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to contact Gemini API', details: error.message });
-  }
+  res.json({
+    riskLevel: riskLevel,
+    score: Math.min(score, 100),
+    why: redFlags.length ? `Detected: ${redFlags.join(', ')}` : 'No common scam patterns found.',
+    redFlags: redFlags
+  });
 });
 
 app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`Port ${port} is already in use. Please stop the conflicting process and try again.`);
+    process.exit(1);
+  } else {
+    console.error(err);
+    process.exit(1);
+  }
 });

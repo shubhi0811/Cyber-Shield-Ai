@@ -1,53 +1,62 @@
 // ============================================
 // Cyber Shield AI - Main JavaScript
-// Features: Password Tools, Breach Check, AI Scam Detector
-// APIs Used: HaveIBeenPwned, Google Gemini
+// Features: Password Tools, Breach Check, Local Scam Detector
+// APIs Used: HaveIBeenPwned
 // ============================================
 
-// ============================================
-// 1. THEME MANAGER CLASS
-// ============================================
-class ThemeManager {
-    constructor() {
-        this.toggleBtn = document.getElementById('themeToggle');
-        this.init();
+function checkPasswordStrength(password) {
+    const strengthFill = document.getElementById('strength-fill');
+    const strengthText = document.getElementById('strength-text');
+
+    if (!password) {
+        strengthFill.className = 'strength-fill';
+        strengthFill.removeAttribute('style');
+        strengthText.textContent = 'None';
+        strengthText.className = 'strength-text';
+        return;
     }
 
-    init() {
-        // Load saved theme on page load
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            this.setDarkMode();
-        }
-        this.toggleBtn.onclick = () => this.toggleTheme();
-    }
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    toggleTheme() {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
-        isDark? this.setLightMode() : this.setDarkMode();
-    }
+    strengthFill.className = 'strength-fill';
+    strengthText.className = 'strength-text';
 
-    setDarkMode() {
-        document.body.setAttribute('data-theme', 'dark');
-        this.toggleBtn.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    }
-
-    setLightMode() {
-        document.body.removeAttribute('data-theme');
-        this.toggleBtn.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
+    if (score <= 2) {
+        strengthFill.id = 'strength-fill';
+        strengthFill.classList.add('weak');
+        strengthText.classList.add('weak');
+        strengthText.textContent = 'Weak';
+    } else if (score === 3) {
+        strengthFill.id = 'strength-fill';
+        strengthFill.classList.add('medium');
+        strengthText.classList.add('medium');
+        strengthText.textContent = 'Medium';
+    } else if (score === 4) {
+        strengthFill.id = 'strength-fill';
+        strengthFill.classList.add('strong');
+        strengthText.classList.add('strong');
+        strengthText.textContent = 'Strong';
+    } else {
+        strengthFill.id = 'strength-fill';
+        strengthFill.classList.add('very-strong');
+        strengthText.classList.add('very-strong');
+        strengthText.textContent = 'Very Strong';
     }
 }
 
 // ============================================
-// 2. PASSWORD TOOLKIT CLASS
+// 1. PASSWORD TOOLKIT CLASS
 // ============================================
 class PasswordToolkit {
     constructor() {
-        this.input = document.getElementById('passwordInput');
-        this.strengthFill = document.getElementById('strengthFill');
-        this.strengthText = document.getElementById('strengthText');
+        this.input = document.getElementById('password-input');
+        this.strengthFill = document.getElementById('strength-fill');
+        this.strengthText = document.getElementById('strength-text');
         this.generateBtn = document.getElementById('generateBtn');
         this.copyBtn = document.getElementById('copyBtn');
         this.lengthInput = document.getElementById('passLength');
@@ -58,38 +67,23 @@ class PasswordToolkit {
     }
 
     init() {
-        this.input.oninput = () => this.updateStrengthMeter();
+        this.input.oninput = () => checkPasswordStrength(this.input.value);
         this.generateBtn.onclick = () => this.generatePassword();
         this.copyBtn.onclick = () => this.copyToClipboard();
     }
 
     calculateStrength(password) {
         let score = 0;
+        if (password.length >= 8) score++;
         if (password.length >= 12) score++;
-        if (password.length >= 16) score++;
         if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
         if (/\d/.test(password)) score++;
         if (/[^A-Za-z0-9]/.test(password)) score++;
-        return score; // 0-5
+        return score;
     }
 
     updateStrengthMeter() {
-        const pwd = this.input.value;
-        const score = this.calculateStrength(pwd);
-        
-        const levels = [
-            { width: '0%', label: 'None', color: 'var(--danger)' },
-            { width: '20%', label: 'Very Weak', color: 'var(--danger)' },
-            { width: '40%', label: 'Weak', color: 'var(--warning)' },
-            { width: '60%', label: 'Medium', color: 'var(--warning)' },
-            { width: '80%', label: 'Strong', color: 'var(--success)' },
-            { width: '100%', label: 'Very Strong', color: 'var(--success)' }
-        ];
-        
-        const level = levels[score];
-        this.strengthFill.style.width = level.width;
-        this.strengthFill.style.background = level.color;
-        this.strengthText.textContent = `Strength: ${level.label}`;
+        checkPasswordStrength(this.input.value);
     }
 
     generatePassword() {
@@ -172,7 +166,7 @@ class BreachChecker {
 }
 
 // ============================================
-// 4. AI SCAM DETECTOR CLASS - Uses Gemini
+// 4. SCAM DETECTOR CLASS - Runs locally
 // ============================================
 class ScamDetector {
     constructor() {
@@ -190,7 +184,7 @@ class ScamDetector {
             return;
         }
         
-        this.resultDiv.textContent = 'Analyzing with AI...';
+        this.resultDiv.textContent = 'Checking for scams locally...';
         
         try {
             const response = await fetch('/api/scan', {
@@ -202,28 +196,32 @@ class ScamDetector {
             const data = await response.json();
 
             if (!response.ok) {
-                const message = data?.error || 'AI analysis failed. Check server logs.';
+                const message = data?.error || 'Scam analysis failed. Check server logs.';
                 this.showResult(message, 'result-warn');
                 return;
             }
 
-            const aiText = data.text ||
-                data.candidates?.[0]?.content?.parts?.[0]?.text ||
-                data.output?.[0]?.content?.[0]?.text ||
-                data.choices?.[0]?.message?.content;
-
-            if (!aiText) {
-                this.showResult('AI returned an unexpected response format.', 'result-warn');
-                return;
-            }
+            const riskLevel = data.riskLevel || 'Safe';
+            const score = data.score ?? 'n/a';
+            const why = data.why || 'No common scam patterns found.';
+            const redFlags = data.redFlags || [];
 
             let riskClass = 'result-safe';
-            if (aiText.includes('Scam')) riskClass = 'result-danger';
-            else if (aiText.includes('Suspicious')) riskClass = 'result-warn';
+            if (riskLevel === 'Scam') riskClass = 'result-danger';
+            else if (riskLevel === 'Suspicious') riskClass = 'result-warn';
+
+            const details = [
+                `<strong>Risk Level:</strong> ${riskLevel}`,
+                `<strong>Score:</strong> ${score}`,
+                `<strong>Why:</strong> ${why}`
+            ];
+            if (redFlags.length) {
+                details.push(`<strong>Red Flags:</strong> ${redFlags.join(', ')}`);
+            }
             
-            this.showResult(aiText.replace(/\n/g, '<br>'), riskClass);
+            this.showResult(details.join('<br>'), riskClass);
         } catch (error) {
-            this.showResult('AI analysis failed. Check server connection.', 'result-warn');
+            this.showResult('Scam analysis failed. Check server connection.', 'result-warn');
         }
     }
 
@@ -264,8 +262,11 @@ class CyberTips {
 
 // INITIALIZE ALL MODULES WHEN PAGE LOADS
 
+document.getElementById('password-input').addEventListener('input', (e) => {
+    checkPasswordStrength(e.target.value);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-    new ThemeManager();
     new PasswordToolkit();
     new BreachChecker();
     new ScamDetector();
